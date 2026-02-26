@@ -53,7 +53,7 @@ Dark mode only · PWA-installable · No account required · Works fully offline
 ### Option A — Docker (recommended)
 
 ```bash
-git clone https://github.com/your-username/coreq
+git clone https://github.com/naxucrishvili1993/coreq
 cd coreq
 
 cp .env.example .env
@@ -62,7 +62,7 @@ cp .env.example .env
 docker compose up --build
 ```
 
-- Frontend → http://localhost:3000
+- Frontend → http://localhost:5072
 - API → http://localhost:3001
 - Swagger → http://localhost:3001/api/docs
 
@@ -75,7 +75,7 @@ PostgreSQL data persists in a named Docker volume across restarts.
 ```bash
 # Frontend
 npm install
-npm run dev        # http://localhost:3000
+npm run dev        # http://localhost:5072
 
 # Backend (separate terminal)
 cd backend
@@ -152,7 +152,7 @@ Copy `.env.example` to `.env`. Required fields:
 | `DATABASE_URL`      | Full connection string (auto-built by compose)                   |
 | `JWT_SECRET`        | Secret for signing tokens — **min 32 chars, change this**        |
 | `JWT_EXPIRES_IN`    | Token lifetime e.g. `7d`                                         |
-| `FRONTEND_URL`      | Allowed CORS origin for the backend e.g. `http://localhost:3000` |
+| `FRONTEND_URL`      | Allowed CORS origin for the backend e.g. `http://localhost:5072` |
 
 ---
 
