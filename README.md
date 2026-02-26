@@ -50,26 +50,6 @@ Dark mode only · PWA-installable · No account required · Works fully offline
 
 ## Getting Started
 
-### Option A — Docker (recommended)
-
-```bash
-git clone https://github.com/naxucrishvili1993/coreq
-cd coreq
-
-cp .env.example .env
-# Open .env and change POSTGRES_PASSWORD and JWT_SECRET
-
-docker compose up --build
-```
-
-- Frontend → http://localhost:5072
-- API → http://localhost:3001
-- Swagger → http://localhost:3001/api/docs
-
-PostgreSQL data persists in a named Docker volume across restarts.
-
-### Option B — Local development
-
 **Prerequisites:** Node 20+, PostgreSQL 14+
 
 ```bash
@@ -85,6 +65,10 @@ npx prisma generate
 npx prisma db push
 npm run start:dev  # http://localhost:3001
 ```
+
+- Frontend → http://localhost:5072
+- API → http://localhost:3001
+- Swagger → http://localhost:3001/api/docs
 
 ---
 
@@ -118,8 +102,6 @@ coreq/
 │   ├── request-store.ts      # Tabs + draft requests + responses
 │   └── ui-store.ts
 ├── public/sw.js              # Service worker (PWA offline cache)
-├── Dockerfile
-├── docker-compose.yml
 └── backend/
     ├── src/
     │   ├── auth/             # JWT register/login
@@ -128,8 +110,7 @@ coreq/
     │   ├── history/          # Paginated list
     │   ├── requests/         # CRUD
     │   └── search/           # pg_trgm full-text search
-    ├── prisma/schema.prisma
-    └── Dockerfile
+    └── prisma/schema.prisma
 ```
 
 ---
@@ -144,15 +125,12 @@ All HTTP requests go through `POST /api/proxy` — a Next.js route that runs ser
 
 Copy `.env.example` to `.env`. Required fields:
 
-| Variable            | Description                                                      |
-| ------------------- | ---------------------------------------------------------------- |
-| `POSTGRES_USER`     | PostgreSQL username                                              |
-| `POSTGRES_PASSWORD` | PostgreSQL password — **change this**                            |
-| `POSTGRES_DB`       | Database name                                                    |
-| `DATABASE_URL`      | Full connection string (auto-built by compose)                   |
-| `JWT_SECRET`        | Secret for signing tokens — **min 32 chars, change this**        |
-| `JWT_EXPIRES_IN`    | Token lifetime e.g. `7d`                                         |
-| `FRONTEND_URL`      | Allowed CORS origin for the backend e.g. `http://localhost:5072` |
+| Variable         | Description                                                                     |
+| ---------------- | ------------------------------------------------------------------------------- |
+| `DATABASE_URL`   | PostgreSQL connection string e.g. `postgresql://user:pass@localhost:5432/coreq` |
+| `JWT_SECRET`     | Secret for signing tokens — **min 32 chars, change this**                       |
+| `JWT_EXPIRES_IN` | Token lifetime e.g. `7d`                                                        |
+| `FRONTEND_URL`   | Allowed CORS origin for the backend e.g. `http://localhost:5072`                |
 
 ---
 
