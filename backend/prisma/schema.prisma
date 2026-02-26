@@ -1,0 +1,220 @@
+// This is your Prisma schema file
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  email     String   @unique @db.VarChar(255)
+  name      String?  @db.VarChar(255)
+  avatarUrl String?  @map("avatar_url")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  collections       Collection[]
+  environments      Environment[]
+  requestHistory    RequestHistory[]
+  responseSnapshots ResponseSnapshot[]
+
+  @@map("users")
+}
+
+model Collection {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  name        String   @db.VarChar(255)
+  description String?
+  color       String?  @db.VarChar(7)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  folders  Folder[]
+  requests Request[]
+
+  @@index([userId])
+  @@map("collections")
+}
+
+model Folder {
+  id             String   @id @default(uuid()) @db.Uuid
+  collectionId   String   @map("collection_id") @db.Uuid
+  parentFolderId String?  @map("parent_folder_id") @db.Uuid
+  name           String   @db.VarChar(255)
+  description    String?
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  collection    Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  parentFolder  Folder?    @relation("FolderTree", fields: [parentFolderId], references: [id], onDelete: Cascade)
+  childFolders  Folder[]   @relation("FolderTree")
+  requests      Request[]
+
+  @@index([collectionId])
+  @@index([parentFolderId])
+  @@map("folders")
+}
+
+model Request {
+  id           String   @id @default(uuid()) @db.Uuid
+  collectionId String?  @map("collection_id") @db.Uuid
+  folderId     String?  @map("folder_id") @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  name         String   @default("Untitled Request") @db.VarChar(255)
+  method       String   @default("GET") @db.VarChar(10)
+  url          String   @default("")
+  description  String?
+  bodyType     String   @default("none") @map("body_type") @db.VarChar(20)
+  bodyContent  String?  @map("body_content")
+  authType     String   @default("none") @map("auth_type") @db.VarChar(20)
+  authConfig   Json     @default("{}") @map("auth_config")
+  sortOrder    Int      @default(0) @map("sort_order")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  collection        Collection?        @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  folder            Folder?            @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  headers           RequestHeader[]
+  params            RequestParam[]
+  formFields        RequestFormField[]
+  history           RequestHistory[]
+  responseSnapshots ResponseSnapshot[]
+
+  @@index([collectionId])
+  @@index([folderId])
+  @@index([userId])
+  @@index([method])
+  @@map("requests")
+}
+
+model RequestHeader {
+  id          String  @id @default(uuid()) @db.Uuid
+  requestId   String  @map("request_id") @db.Uuid
+  key         String  @db.VarChar(255)
+  value       String  @default("")
+  description String?
+  enabled     Boolean @default(true)
+  sortOrder   Int     @default(0) @map("sort_order")
+
+  request Request @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([requestId])
+  @@map("request_headers")
+}
+
+model RequestParam {
+  id          String  @id @default(uuid()) @db.Uuid
+  requestId   String  @map("request_id") @db.Uuid
+  key         String  @db.VarChar(255)
+  value       String  @default("")
+  description String?
+  enabled     Boolean @default(true)
+  sortOrder   Int     @default(0) @map("sort_order")
+
+  request Request @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([requestId])
+  @@map("request_params")
+}
+
+model RequestFormField {
+  id          String  @id @default(uuid()) @db.Uuid
+  requestId   String  @map("request_id") @db.Uuid
+  key         String  @db.VarChar(255)
+  value       String  @default("")
+  description String?
+  enabled     Boolean @default(true)
+  sortOrder   Int     @default(0) @map("sort_order")
+
+  request Request @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([requestId])
+  @@map("request_form_fields")
+}
+
+model Environment {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  name      String   @db.VarChar(255)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  user      User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  variables EnvironmentVariable[]
+
+  @@index([userId])
+  @@map("environments")
+}
+
+model EnvironmentVariable {
+  id            String  @id @default(uuid()) @db.Uuid
+  environmentId String  @map("environment_id") @db.Uuid
+  key           String  @db.VarChar(255)
+  value         String  @default("")
+  description   String?
+  enabled       Boolean @default(true)
+  secret        Boolean @default(false)
+  sortOrder     Int     @default(0) @map("sort_order")
+
+  environment Environment @relation(fields: [environmentId], references: [id], onDelete: Cascade)
+
+  @@index([environmentId])
+  @@index([key])
+  @@map("environment_variables")
+}
+
+model RequestHistory {
+  id              String   @id @default(uuid()) @db.Uuid
+  userId          String   @map("user_id") @db.Uuid
+  requestId       String?  @map("request_id") @db.Uuid
+  requestName     String?  @map("request_name") @db.VarChar(255)
+  method          String   @db.VarChar(10)
+  url             String
+  headers         Json     @default("[]")
+  params          Json     @default("[]")
+  bodyType        String?  @map("body_type") @db.VarChar(20)
+  bodyContent     String?  @map("body_content")
+  authType        String?  @map("auth_type") @db.VarChar(20)
+  authConfig      Json     @default("{}") @map("auth_config")
+  responseStatus  Int?     @map("response_status")
+  responseHeaders Json     @default("{}") @map("response_headers")
+  responseBody    String?  @map("response_body")
+  responseSize    Int?     @map("response_size")
+  responseTime    Int?     @map("response_time")
+  executedAt      DateTime @default(now()) @map("executed_at") @db.Timestamptz()
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  request Request? @relation(fields: [requestId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([requestId])
+  @@index([executedAt(sort: Desc)])
+  @@map("request_history")
+}
+
+model ResponseSnapshot {
+  id        String   @id @default(uuid()) @db.Uuid
+  requestId String?  @map("request_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  name      String   @default("Snapshot") @db.VarChar(255)
+  status    Int?
+  headers   Json     @default("{}")
+  body      String?
+  size      Int?
+  time      Int?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  request Request? @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([requestId])
+  @@index([userId])
+  @@map("response_snapshots")
+}
